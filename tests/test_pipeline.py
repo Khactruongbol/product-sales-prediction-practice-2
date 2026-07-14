@@ -1,4 +1,6 @@
 import json
+import re
+from pathlib import Path
 
 import joblib
 import numpy as np
@@ -21,6 +23,10 @@ from src.config import (
 from src.evaluate import validate_figure_artifacts
 from src.predict import predict_units
 from src.prepare_data import add_history_features, temporal_split
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+FINAL_NOTEBOOK_PATH = PROJECT_ROOT / "notebooks" / "99_product_sales_workflow.ipynb"
 
 
 def test_raw_schema_is_valid():
@@ -90,3 +96,19 @@ def test_model_metrics_figures_and_prediction_are_valid():
     prediction = predict_units(model, values)
     assert np.isfinite(prediction)
     assert prediction >= 0
+
+
+def test_final_notebook_is_report_only_and_all_images_exist():
+    notebook = json.loads(FINAL_NOTEBOOK_PATH.read_text(encoding="utf-8"))
+    assert notebook["nbformat"] == 4
+    assert len(notebook["cells"]) == 19
+    assert all(cell["cell_type"] == "markdown" for cell in notebook["cells"])
+    assert not any(cell["cell_type"] == "code" for cell in notebook["cells"])
+
+    markdown = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"])
+    image_targets = re.findall(r"!\[[^\]]*\]\(([^)]+)\)", markdown)
+    assert len(image_targets) == 9
+    for target in image_targets:
+        image_path = (FINAL_NOTEBOOK_PATH.parent / target).resolve()
+        assert image_path.exists(), f"Notebook image is missing: {target}"
+        assert image_path.stat().st_size > 1000
