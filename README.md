@@ -73,6 +73,7 @@ Lần kiểm thử bàn giao: 5 test pass; Streamlit trả HTTP 200 trên localh
 
 ## Artifact chính
 
+- `notebooks/99_product_sales_workflow.ipynb`: notebook báo cáo cuối dạng Markdown-only, tổng hợp yêu cầu, dữ liệu, các bước, model, metrics và 9 ảnh sau train.
 - `data/raw/source_metadata.json`: nguồn, giấy phép, thời điểm tải và SHA-256.
 - `data/processed/cleaning_report.json`: số dòng và khoảng thời gian của từng split.
 - `reports/metrics/model_comparison.csv`: bảng so sánh đầy đủ.
