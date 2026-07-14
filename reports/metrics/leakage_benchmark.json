@@ -1,0 +1,25 @@
+{
+  "deployable": false,
+  "feature": "demand_forecast",
+  "safety_reason": "Near-direct target proxy in this synthetic dataset; excluded from saved model and UI.",
+  "correlation_with_target": 0.9968583570254871,
+  "validation_metrics": {
+    "mae": 8.157173333333334,
+    "mse": 97.4339707047619,
+    "rmse": 9.87086473946239,
+    "r2": 0.9918794458530199
+  },
+  "test_metrics": {
+    "mae": 8.09061320754717,
+    "mse": 95.85059935849057,
+    "rmse": 9.790331933008735,
+    "r2": 0.9918085789371307
+  },
+  "safe_model": "inventory_only_linear",
+  "safe_test_metrics": {
+    "mae": 68.83263761981836,
+    "mse": 7719.1673369099035,
+    "rmse": 87.85879202965349,
+    "r2": 0.34031763667030834
+  }
+}

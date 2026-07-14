@@ -1,4 +1,4 @@
-"""Tune, compare, select, and persist product-sales regression models."""
+"""Tune, compare, select, audit, and persist product-sales regressors."""
 
 from __future__ import annotations
 
@@ -11,9 +11,9 @@ import numpy as np
 import pandas as pd
 import sklearn
 from sklearn.compose import ColumnTransformer
-from sklearn.ensemble import HistGradientBoostingRegressor, RandomForestRegressor
+from sklearn.ensemble import ExtraTreesRegressor, HistGradientBoostingRegressor, RandomForestRegressor
 from sklearn.impute import SimpleImputer
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.model_selection import ParameterGrid
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
@@ -25,6 +25,9 @@ from .config import (
     CATEGORICAL_COLUMNS,
     FEATURE_COLUMNS,
     FEATURE_SCHEMA_PATH,
+    FEATURE_SIGNAL_AUDIT_PATH,
+    LEAKAGE_BENCHMARK_PATH,
+    LEGACY_TEST_R2,
     MODEL_COMPARISON_PATH,
     NUMERIC_COLUMNS,
     RANDOM_SEED,
@@ -37,19 +40,26 @@ from .config import (
 )
 from .evaluate import (
     create_eda_figures,
+    create_improvement_figures,
     create_model_figures,
     regression_metrics,
     validate_figure_artifacts,
 )
 
 
-def make_preprocessor(scale_numeric: bool) -> ColumnTransformer:
-    numeric_steps: list[tuple[str, object]] = [("imputer", SimpleImputer(strategy="median"))]
-    if scale_numeric:
-        numeric_steps.append(("scaler", StandardScaler()))
-    return ColumnTransformer(
-        [
-            ("numeric", Pipeline(numeric_steps), NUMERIC_COLUMNS),
+def make_preprocessor(
+    scale_numeric: bool,
+    numeric_columns: list[str],
+    categorical_columns: list[str],
+) -> ColumnTransformer:
+    transformers: list[tuple[str, object, list[str]]] = []
+    if numeric_columns:
+        numeric_steps: list[tuple[str, object]] = [("imputer", SimpleImputer(strategy="median"))]
+        if scale_numeric:
+            numeric_steps.append(("scaler", StandardScaler()))
+        transformers.append(("numeric", Pipeline(numeric_steps), numeric_columns))
+    if categorical_columns:
+        transformers.append(
             (
                 "categorical",
                 Pipeline(
@@ -58,24 +68,39 @@ def make_preprocessor(scale_numeric: bool) -> ColumnTransformer:
                         ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
                     ]
                 ),
-                CATEGORICAL_COLUMNS,
-            ),
-        ],
-        remainder="drop",
-    )
+                categorical_columns,
+            )
+        )
+    return ColumnTransformer(transformers, remainder="drop")
 
 
 def model_specs() -> dict[str, dict[str, object]]:
+    full_features = {"numeric": NUMERIC_COLUMNS, "categorical": CATEGORICAL_COLUMNS}
     return {
+        "inventory_only_linear": {
+            "estimator": LinearRegression(),
+            "scale": True,
+            "grid": [{}],
+            "numeric": ["inventory_level"],
+            "categorical": [],
+        },
         "linear_regression": {
             "estimator": LinearRegression(),
             "scale": True,
             "grid": [{}],
+            **full_features,
+        },
+        "ridge_regression": {
+            "estimator": Ridge(),
+            "scale": True,
+            "grid": list(ParameterGrid({"alpha": [100.0, 1000.0, 10000.0]})),
+            **full_features,
         },
         "decision_tree": {
             "estimator": DecisionTreeRegressor(random_state=RANDOM_SEED),
             "scale": False,
             "grid": list(ParameterGrid({"max_depth": [10, 18], "min_samples_leaf": [3, 10]})),
+            **full_features,
         },
         "random_forest": {
             "estimator": RandomForestRegressor(
@@ -86,18 +111,36 @@ def model_specs() -> dict[str, dict[str, object]]:
             ),
             "scale": False,
             "grid": list(ParameterGrid({"max_depth": [14, None], "min_samples_leaf": [2]})),
+            **full_features,
         },
         "hist_gradient_boosting": {
             "estimator": HistGradientBoostingRegressor(random_state=RANDOM_SEED, max_iter=180),
             "scale": False,
             "grid": list(ParameterGrid({"learning_rate": [0.06, 0.1], "max_leaf_nodes": [31, 63]})),
+            **full_features,
+        },
+        "extra_trees": {
+            "estimator": ExtraTreesRegressor(
+                n_estimators=160,
+                random_state=RANDOM_SEED,
+                n_jobs=-1,
+                max_features=1.0,
+            ),
+            "scale": False,
+            "grid": list(ParameterGrid({"max_depth": [14, None], "min_samples_leaf": [2, 5]})),
+            **full_features,
         },
     }
 
 
-def build_pipeline(estimator, scale: bool, params: dict[str, object]) -> Pipeline:
-    estimator = sklearn.base.clone(estimator).set_params(**params)
-    return Pipeline([("preprocess", make_preprocessor(scale)), ("model", estimator)])
+def build_pipeline(estimator, scale: bool, params: dict[str, object], spec: dict[str, object]) -> Pipeline:
+    fitted_estimator = sklearn.base.clone(estimator).set_params(**params)
+    preprocessor = make_preprocessor(
+        scale,
+        list(spec["numeric"]),
+        list(spec["categorical"]),
+    )
+    return Pipeline([("preprocess", preprocessor), ("model", fitted_estimator)])
 
 
 def train_and_evaluate() -> dict[str, object]:
@@ -106,6 +149,7 @@ def train_and_evaluate() -> dict[str, object]:
     validation = _read_partition(VALIDATION_DATA_PATH)
     test = _read_partition(TEST_DATA_PATH)
     combined = pd.concat([train, validation], ignore_index=True)
+    complete = pd.concat([combined, test], ignore_index=True)
     create_eda_figures(combined)
 
     comparison: list[dict[str, object]] = []
@@ -113,25 +157,34 @@ def train_and_evaluate() -> dict[str, object]:
     baseline_test = regression_metrics(test[TARGET_COLUMN], test["units_sold_lag_7"])
     comparison.append(_comparison_row("seasonal_lag_7_baseline", baseline_validation, baseline_test, {}, 0.0, 0.0))
 
+    specs = model_specs()
     fitted: dict[str, Pipeline] = {}
     predictions: dict[str, np.ndarray] = {}
+    validation_predictions: dict[str, np.ndarray] = {}
     validation_choices: dict[str, dict[str, object]] = {}
-    for name, spec in model_specs().items():
+    for name, spec in specs.items():
         best_params: dict[str, object] | None = None
         best_validation: dict[str, float] | None = None
+        best_validation_prediction: np.ndarray | None = None
         for params in spec["grid"]:
-            candidate = build_pipeline(spec["estimator"], bool(spec["scale"]), params)
+            candidate = build_pipeline(spec["estimator"], bool(spec["scale"]), params, spec)
             candidate.fit(train[FEATURE_COLUMNS], train[TARGET_COLUMN])
-            candidate_metrics = regression_metrics(
-                validation[TARGET_COLUMN], candidate.predict(validation[FEATURE_COLUMNS])
-            )
+            candidate_prediction = np.maximum(0.0, candidate.predict(validation[FEATURE_COLUMNS]))
+            candidate_metrics = regression_metrics(validation[TARGET_COLUMN], candidate_prediction)
             if best_validation is None or candidate_metrics["rmse"] < best_validation["rmse"]:
                 best_validation = candidate_metrics
                 best_params = params
-        assert best_params is not None and best_validation is not None
-        validation_choices[name] = {"params": best_params, "metrics": best_validation}
+                best_validation_prediction = candidate_prediction
+        assert best_params is not None and best_validation is not None and best_validation_prediction is not None
+        validation_predictions[name] = best_validation_prediction
+        selected_features = list(spec["categorical"]) + list(spec["numeric"])
+        validation_choices[name] = {
+            "params": best_params,
+            "metrics": best_validation,
+            "selected_features": selected_features,
+        }
 
-        final_model = build_pipeline(spec["estimator"], bool(spec["scale"]), best_params)
+        final_model = build_pipeline(spec["estimator"], bool(spec["scale"]), best_params, spec)
         start = time.perf_counter()
         final_model.fit(combined[FEATURE_COLUMNS], combined[TARGET_COLUMN])
         fit_seconds = time.perf_counter() - start
@@ -147,25 +200,62 @@ def train_and_evaluate() -> dict[str, object]:
 
     comparison_frame = pd.DataFrame(comparison).sort_values("test_rmse").reset_index(drop=True)
     comparison_frame.to_csv(MODEL_COMPARISON_PATH, index=False)
-    ml_results = comparison_frame[comparison_frame["model"] != "seasonal_lag_7_baseline"]
-    best_name = str(ml_results.iloc[0]["model"])
+    best_name = min(validation_choices, key=lambda model: validation_choices[model]["metrics"]["rmse"])
     best_model = fitted[best_name]
+    best_row = comparison_frame[comparison_frame["model"] == best_name].iloc[0]
+    best_test_metrics = {key: float(best_row[f"test_{key}"]) for key in ("mae", "mse", "rmse", "r2")}
+    if best_test_metrics["r2"] < LEGACY_TEST_R2:
+        raise AssertionError(
+            f"Improved safe model regressed below legacy R2: {best_test_metrics['r2']} < {LEGACY_TEST_R2}"
+        )
+
+    validation_abs_error = np.abs(
+        validation[TARGET_COLUMN].to_numpy(dtype=float) - validation_predictions[best_name]
+    )
+    interval_90 = float(np.quantile(validation_abs_error, 0.90))
+    selected_features = validation_choices[best_name]["selected_features"]
     joblib.dump(best_model, BEST_MODEL_PATH)
-    _write_feature_schema(combined)
+    _write_feature_schema(combined, selected_features)
     create_model_figures(comparison_frame, test, predictions[best_name], best_model)
+
+    signal_audit = _write_signal_audit(complete)
+    leakage_prediction = test["demand_forecast"].clip(lower=0, upper=test["inventory_level"])
+    leakage_test_metrics = regression_metrics(test[TARGET_COLUMN], leakage_prediction)
+    leakage_validation_metrics = regression_metrics(
+        validation[TARGET_COLUMN],
+        validation["demand_forecast"].clip(lower=0, upper=validation["inventory_level"]),
+    )
+    leakage_benchmark = {
+        "deployable": False,
+        "feature": "demand_forecast",
+        "safety_reason": "Near-direct target proxy in this synthetic dataset; excluded from saved model and UI.",
+        "correlation_with_target": signal_audit["correlations"]["demand_forecast"],
+        "validation_metrics": leakage_validation_metrics,
+        "test_metrics": leakage_test_metrics,
+        "safe_model": best_name,
+        "safe_test_metrics": best_test_metrics,
+    }
+    LEAKAGE_BENCHMARK_PATH.write_text(json.dumps(leakage_benchmark, indent=2), encoding="utf-8")
+    stability = create_improvement_figures(
+        best_test_metrics,
+        leakage_test_metrics,
+        test,
+        predictions[best_name],
+    )
     figures = validate_figure_artifacts()
 
-    best_row = ml_results.iloc[0]
     baseline_row = comparison_frame[comparison_frame["model"] == "seasonal_lag_7_baseline"].iloc[0]
     best_info = {
         "model": best_name,
-        "selection_rule": "Lowest test RMSE among ML models after hyperparameters were selected on validation only.",
-        "test_metrics": {key: float(best_row[f"test_{key}"]) for key in ("mae", "mse", "rmse", "r2")},
-        "validation_metrics": {
-            key: float(best_row[f"validation_{key}"]) for key in ("mae", "mse", "rmse", "r2")
-        },
+        "selection_rule": "Lowest validation RMSE among deployable ML candidates; test used for final reporting only.",
+        "selected_features": selected_features,
+        "test_metrics": best_test_metrics,
+        "validation_metrics": validation_choices[best_name]["metrics"],
+        "legacy_test_r2": LEGACY_TEST_R2,
+        "test_r2_improvement": float(best_test_metrics["r2"] - LEGACY_TEST_R2),
+        "prediction_interval_90_abs_error": interval_90,
         "baseline_test_rmse": float(baseline_row["test_rmse"]),
-        "best_params": json.loads(str(best_row["best_params"])),
+        "best_params": validation_choices[best_name]["params"],
         "model_path": str(BEST_MODEL_PATH.relative_to(BEST_MODEL_PATH.parents[1])),
     }
     BEST_MODEL_INFO_PATH.write_text(json.dumps(best_info, indent=2), encoding="utf-8")
@@ -183,16 +273,68 @@ def train_and_evaluate() -> dict[str, object]:
             "validation": [str(validation["date"].min()), str(validation["date"].max())],
             "test": [str(test["date"].min()), str(test["date"].max())],
         },
-        "feature_count": len(FEATURE_COLUMNS),
-        "features": FEATURE_COLUMNS,
-        "excluded_from_features": ["date", TARGET_COLUMN, "demand_forecast"],
+        "available_feature_count": len(FEATURE_COLUMNS),
+        "available_features": FEATURE_COLUMNS,
+        "selected_model_features": selected_features,
+        "excluded_from_deployable_features": ["date", TARGET_COLUMN, "demand_forecast"],
         "validation_choices": validation_choices,
         "best_model": best_name,
+        "prediction_interval_90_abs_error": interval_90,
+        "leakage_benchmark_deployable": False,
+        "test_stability_months": stability["month"].tolist(),
         "figure_files": figures,
         "sklearn_version": sklearn.__version__,
     }
     TRAINING_SUMMARY_PATH.write_text(json.dumps(summary, indent=2), encoding="utf-8")
-    return {"best_model": best_info, "rows": summary["python_rows"], "figures": figures}
+    return {
+        "best_model": best_info,
+        "rows": summary["python_rows"],
+        "leakage_benchmark": leakage_benchmark,
+        "figures": figures,
+    }
+
+
+def _write_signal_audit(frame: pd.DataFrame) -> dict[str, object]:
+    audit_columns = [
+        "inventory_level",
+        "units_ordered",
+        "price",
+        "discount",
+        "competitor_pricing",
+        "demand_forecast",
+        "units_sold_lag_1",
+        "units_sold_lag_7",
+        "units_sold_rolling_mean_28",
+    ]
+    correlations = {
+        column: float(frame[TARGET_COLUMN].corr(frame[column])) for column in audit_columns
+    }
+    sell_through = frame[TARGET_COLUMN] / frame["inventory_level"]
+    forecast_error = frame["demand_forecast"] - frame[TARGET_COLUMN]
+    audit = {
+        "rows": int(len(frame)),
+        "correlations": correlations,
+        "units_sold_not_above_inventory_rate": float(
+            (frame[TARGET_COLUMN] <= frame["inventory_level"]).mean()
+        ),
+        "sell_through_ratio": {
+            "mean": float(sell_through.mean()),
+            "std": float(sell_through.std()),
+            "min": float(sell_through.min()),
+            "max": float(sell_through.max()),
+        },
+        "demand_forecast_error": {
+            "mean": float(forecast_error.mean()),
+            "std": float(forecast_error.std()),
+            "mae": float(forecast_error.abs().mean()),
+        },
+        "conclusion": (
+            "Inventory level contains the only material deployable signal. Demand Forecast is a near-direct "
+            "target proxy and remains excluded from the deployed model."
+        ),
+    }
+    FEATURE_SIGNAL_AUDIT_PATH.write_text(json.dumps(audit, indent=2), encoding="utf-8")
+    return audit
 
 
 def _read_partition(path) -> pd.DataFrame:
@@ -214,9 +356,10 @@ def _comparison_row(name, validation, test, params, fit_seconds, predict_seconds
     }
 
 
-def _write_feature_schema(frame: pd.DataFrame) -> None:
+def _write_feature_schema(frame: pd.DataFrame, selected_features: list[str]) -> None:
     schema = {
         "feature_order": FEATURE_COLUMNS,
+        "selected_model_features": selected_features,
         "categorical": {
             column: sorted(str(value) for value in frame[column].dropna().unique())
             for column in CATEGORICAL_COLUMNS

@@ -15,7 +15,7 @@ import seaborn as sns
 from sklearn.inspection import permutation_importance
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
-from .config import FEATURE_COLUMNS, FIGURES_DIR, TARGET_COLUMN
+from .config import FEATURE_COLUMNS, FIGURES_DIR, TARGET_COLUMN, TEST_PERIOD_STABILITY_PATH
 
 sns.set_theme(style="whitegrid", context="notebook")
 
@@ -120,6 +120,50 @@ def create_model_figures(
     _save(fig, "feature_importance.png")
 
 
+def create_improvement_figures(
+    safe_metrics: dict[str, float],
+    leakage_metrics: dict[str, float],
+    test: pd.DataFrame,
+    predictions: np.ndarray,
+) -> pd.DataFrame:
+    comparison = pd.DataFrame(
+        {
+            "scenario": ["Leakage-safe deployed model", "Demand Forecast benchmark (not deployable)"],
+            "r2": [safe_metrics["r2"], leakage_metrics["r2"]],
+        }
+    )
+    fig, ax = plt.subplots(figsize=(9, 5))
+    colors = ["#16a34a", "#dc2626"]
+    ax.barh(comparison["scenario"], comparison["r2"], color=colors)
+    ax.set(title="Safe Model vs Leakage-risk Benchmark", xlabel="Test R²", ylabel="")
+    ax.set_xlim(min(-0.05, comparison["r2"].min() - 0.05), 1.05)
+    for index, value in enumerate(comparison["r2"]):
+        ax.text(value + 0.01, index, f"{value:.4f}", va="center")
+    _save(fig, "safe_vs_leakage_r2.png")
+
+    stability = pd.DataFrame(
+        {
+            "date": pd.to_datetime(test["date"]),
+            "actual": test[TARGET_COLUMN].to_numpy(dtype=float),
+            "predicted": np.maximum(0.0, np.asarray(predictions, dtype=float)),
+        }
+    )
+    rows: list[dict[str, float | int | str]] = []
+    for period, group in stability.groupby(stability["date"].dt.to_period("M")):
+        metrics = regression_metrics(group["actual"], group["predicted"])
+        rows.append({"month": str(period), "rows": int(len(group)), **metrics})
+    stability_metrics = pd.DataFrame(rows)
+    stability_metrics.to_csv(TEST_PERIOD_STABILITY_PATH, index=False)
+
+    fig, ax = plt.subplots(figsize=(9, 5))
+    ax.plot(stability_metrics["month"], stability_metrics["rmse"], marker="o", color="#2563eb", label="RMSE")
+    ax.plot(stability_metrics["month"], stability_metrics["mae"], marker="s", color="#ea580c", label="MAE")
+    ax.set(title="Monthly Error Stability on the Temporal Test Set", xlabel="Test month", ylabel="Error (units)")
+    ax.legend()
+    _save(fig, "monthly_model_stability.png")
+    return stability_metrics
+
+
 def validate_figure_artifacts() -> list[str]:
     expected = [
         "target_distribution.png",
@@ -131,6 +175,8 @@ def validate_figure_artifacts() -> list[str]:
         "residual_distribution.png",
         "residuals_over_time.png",
         "feature_importance.png",
+        "safe_vs_leakage_r2.png",
+        "monthly_model_stability.png",
     ]
     missing = [name for name in expected if not (FIGURES_DIR / name).exists() or (FIGURES_DIR / name).stat().st_size < 1000]
     if missing:

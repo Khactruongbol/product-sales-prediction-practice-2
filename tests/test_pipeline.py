@@ -12,12 +12,16 @@ from src.config import (
     BEST_MODEL_PATH,
     CATEGORICAL_COLUMNS,
     FEATURE_COLUMNS,
+    FEATURE_SIGNAL_AUDIT_PATH,
     FEATURE_SCHEMA_PATH,
     FIGURES_DIR,
+    LEAKAGE_BENCHMARK_PATH,
+    LEGACY_TEST_R2,
     MODEL_COMPARISON_PATH,
     RAW_DATA_PATH,
     TEST_DATA_PATH,
     TRAIN_DATA_PATH,
+    TEST_PERIOD_STABILITY_PATH,
     VALIDATION_DATA_PATH,
 )
 from src.evaluate import validate_figure_artifacts
@@ -80,10 +84,13 @@ def test_model_metrics_figures_and_prediction_are_valid():
     assert FEATURE_SCHEMA_PATH.exists()
     info = json.loads(BEST_MODEL_INFO_PATH.read_text(encoding="utf-8"))
     comparison = pd.read_csv(MODEL_COMPARISON_PATH)
-    assert len(comparison) == 5
+    assert len(comparison) == 8
     assert {"mae", "mse", "rmse", "r2"} == set(info["test_metrics"])
     assert np.isfinite(comparison.filter(regex="test_").select_dtypes("number").to_numpy()).all()
-    assert len(validate_figure_artifacts()) == 9
+    assert info["test_metrics"]["r2"] >= LEGACY_TEST_R2
+    assert "demand_forecast" not in info["selected_features"]
+    assert info["prediction_interval_90_abs_error"] > 0
+    assert len(validate_figure_artifacts()) == 11
 
     test = pd.read_csv(TEST_DATA_PATH, dtype={column: "string" for column in CATEGORICAL_COLUMNS})
     row = test.iloc[0]
@@ -98,6 +105,22 @@ def test_model_metrics_figures_and_prediction_are_valid():
     assert prediction >= 0
 
 
+def test_improvement_audits_are_safe_and_complete():
+    signal = json.loads(FEATURE_SIGNAL_AUDIT_PATH.read_text(encoding="utf-8"))
+    leakage = json.loads(LEAKAGE_BENCHMARK_PATH.read_text(encoding="utf-8"))
+    stability = pd.read_csv(TEST_PERIOD_STABILITY_PATH)
+    schema = json.loads(FEATURE_SCHEMA_PATH.read_text(encoding="utf-8"))
+
+    assert signal["units_sold_not_above_inventory_rate"] == 1.0
+    assert signal["correlations"]["demand_forecast"] > 0.99
+    assert leakage["deployable"] is False
+    assert leakage["test_metrics"]["r2"] > 0.99
+    assert leakage["safe_test_metrics"]["r2"] < leakage["test_metrics"]["r2"]
+    assert schema["selected_model_features"] == ["inventory_level"]
+    assert list(stability.columns) == ["month", "rows", "mae", "mse", "rmse", "r2"]
+    assert len(stability) >= 4
+
+
 def test_final_notebook_is_report_only_and_all_images_exist():
     notebook = json.loads(FINAL_NOTEBOOK_PATH.read_text(encoding="utf-8"))
     assert notebook["nbformat"] == 4
@@ -107,7 +130,7 @@ def test_final_notebook_is_report_only_and_all_images_exist():
 
     markdown = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"])
     image_targets = re.findall(r"!\[[^\]]*\]\(([^)]+)\)", markdown)
-    assert len(image_targets) == 9
+    assert len(image_targets) == 11
     for target in image_targets:
         image_path = (FINAL_NOTEBOOK_PATH.parent / target).resolve()
         assert image_path.exists(), f"Notebook image is missing: {target}"

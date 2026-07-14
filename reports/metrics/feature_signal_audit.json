@@ -1,0 +1,27 @@
+{
+  "rows": 70300,
+  "correlations": {
+    "inventory_level": 0.5898992794474426,
+    "units_ordered": -0.0015048982319366558,
+    "price": 0.0014032591426542792,
+    "discount": 0.0030659627313732777,
+    "competitor_pricing": 0.0016299713149572873,
+    "demand_forecast": 0.9968583570254871,
+    "units_sold_lag_1": -0.0001352715428006768,
+    "units_sold_lag_7": 0.0012413519456877706,
+    "units_sold_rolling_mean_28": 0.006233611468597519
+  },
+  "units_sold_not_above_inventory_rate": 1.0,
+  "sell_through_ratio": {
+    "mean": 0.49789913207317704,
+    "std": 0.2899146419817988,
+    "min": 0.0,
+    "max": 1.0
+  },
+  "demand_forecast_error": {
+    "mean": 5.030381507823614,
+    "std": 8.66109133615975,
+    "mae": 8.339765291607398
+  },
+  "conclusion": "Inventory level contains the only material deployable signal. Demand Forecast is a near-direct target proxy and remains excluded from the deployed model."
+}

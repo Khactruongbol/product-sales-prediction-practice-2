@@ -1,5 +1,5 @@
 {
-  "trained_at_utc": "2026-07-14T04:26:22.764793+00:00",
+  "trained_at_utc": "2026-07-14T05:01:43.993288+00:00",
   "random_seed": 42,
   "python_rows": {
     "train": 49200,
@@ -21,8 +21,8 @@
       "2024-01-01 00:00:00"
     ]
   },
-  "feature_count": 32,
-  "features": [
+  "available_feature_count": 32,
+  "available_features": [
     "store_id",
     "product_id",
     "category",
@@ -56,12 +56,27 @@
     "units_sold_rolling_mean_28",
     "units_sold_rolling_std_28"
   ],
-  "excluded_from_features": [
+  "selected_model_features": [
+    "inventory_level"
+  ],
+  "excluded_from_deployable_features": [
     "date",
     "units_sold",
     "demand_forecast"
   ],
   "validation_choices": {
+    "inventory_only_linear": {
+      "params": {},
+      "metrics": {
+        "mae": 68.62065416501677,
+        "mse": 7712.890041690727,
+        "rmse": 87.8230609902133,
+        "r2": 0.3571755234830797
+      },
+      "selected_features": [
+        "inventory_level"
+      ]
+    },
     "linear_regression": {
       "params": {},
       "metrics": {
@@ -69,7 +84,86 @@
         "mse": 7723.334146917692,
         "rmse": 87.88250193819981,
         "r2": 0.35630506812342566
-      }
+      },
+      "selected_features": [
+        "store_id",
+        "product_id",
+        "category",
+        "region",
+        "weather_condition",
+        "holiday_promotion",
+        "seasonality",
+        "inventory_level",
+        "units_ordered",
+        "price",
+        "discount",
+        "competitor_pricing",
+        "year",
+        "month",
+        "quarter",
+        "iso_week",
+        "day_of_week",
+        "is_weekend",
+        "is_month_start",
+        "is_month_end",
+        "month_sin",
+        "month_cos",
+        "day_of_week_sin",
+        "day_of_week_cos",
+        "units_sold_lag_1",
+        "units_sold_lag_7",
+        "units_sold_lag_14",
+        "units_sold_lag_28",
+        "units_sold_rolling_mean_7",
+        "units_sold_rolling_std_7",
+        "units_sold_rolling_mean_28",
+        "units_sold_rolling_std_28"
+      ]
+    },
+    "ridge_regression": {
+      "params": {
+        "alpha": 100.0
+      },
+      "metrics": {
+        "mae": 68.63959541124318,
+        "mse": 7723.250599538248,
+        "rmse": 87.88202660122403,
+        "r2": 0.35631203131104605
+      },
+      "selected_features": [
+        "store_id",
+        "product_id",
+        "category",
+        "region",
+        "weather_condition",
+        "holiday_promotion",
+        "seasonality",
+        "inventory_level",
+        "units_ordered",
+        "price",
+        "discount",
+        "competitor_pricing",
+        "year",
+        "month",
+        "quarter",
+        "iso_week",
+        "day_of_week",
+        "is_weekend",
+        "is_month_start",
+        "is_month_end",
+        "month_sin",
+        "month_cos",
+        "day_of_week_sin",
+        "day_of_week_cos",
+        "units_sold_lag_1",
+        "units_sold_lag_7",
+        "units_sold_lag_14",
+        "units_sold_lag_28",
+        "units_sold_rolling_mean_7",
+        "units_sold_rolling_std_7",
+        "units_sold_rolling_mean_28",
+        "units_sold_rolling_std_28"
+      ]
     },
     "decision_tree": {
       "params": {
@@ -81,7 +175,41 @@
         "mse": 8498.74290885298,
         "rmse": 92.18862678689264,
         "r2": 0.29167926264929234
-      }
+      },
+      "selected_features": [
+        "store_id",
+        "product_id",
+        "category",
+        "region",
+        "weather_condition",
+        "holiday_promotion",
+        "seasonality",
+        "inventory_level",
+        "units_ordered",
+        "price",
+        "discount",
+        "competitor_pricing",
+        "year",
+        "month",
+        "quarter",
+        "iso_week",
+        "day_of_week",
+        "is_weekend",
+        "is_month_start",
+        "is_month_end",
+        "month_sin",
+        "month_cos",
+        "day_of_week_sin",
+        "day_of_week_cos",
+        "units_sold_lag_1",
+        "units_sold_lag_7",
+        "units_sold_lag_14",
+        "units_sold_lag_28",
+        "units_sold_rolling_mean_7",
+        "units_sold_rolling_std_7",
+        "units_sold_rolling_mean_28",
+        "units_sold_rolling_std_28"
+      ]
     },
     "random_forest": {
       "params": {
@@ -93,7 +221,41 @@
         "mse": 8002.366217409393,
         "rmse": 89.45594567947619,
         "r2": 0.33304936971780685
-      }
+      },
+      "selected_features": [
+        "store_id",
+        "product_id",
+        "category",
+        "region",
+        "weather_condition",
+        "holiday_promotion",
+        "seasonality",
+        "inventory_level",
+        "units_ordered",
+        "price",
+        "discount",
+        "competitor_pricing",
+        "year",
+        "month",
+        "quarter",
+        "iso_week",
+        "day_of_week",
+        "is_weekend",
+        "is_month_start",
+        "is_month_end",
+        "month_sin",
+        "month_cos",
+        "day_of_week_sin",
+        "day_of_week_cos",
+        "units_sold_lag_1",
+        "units_sold_lag_7",
+        "units_sold_lag_14",
+        "units_sold_lag_28",
+        "units_sold_rolling_mean_7",
+        "units_sold_rolling_std_7",
+        "units_sold_rolling_mean_28",
+        "units_sold_rolling_std_28"
+      ]
     },
     "hist_gradient_boosting": {
       "params": {
@@ -105,10 +267,99 @@
         "mse": 7797.363899981212,
         "rmse": 88.30268342457782,
         "r2": 0.35013511924531326
-      }
+      },
+      "selected_features": [
+        "store_id",
+        "product_id",
+        "category",
+        "region",
+        "weather_condition",
+        "holiday_promotion",
+        "seasonality",
+        "inventory_level",
+        "units_ordered",
+        "price",
+        "discount",
+        "competitor_pricing",
+        "year",
+        "month",
+        "quarter",
+        "iso_week",
+        "day_of_week",
+        "is_weekend",
+        "is_month_start",
+        "is_month_end",
+        "month_sin",
+        "month_cos",
+        "day_of_week_sin",
+        "day_of_week_cos",
+        "units_sold_lag_1",
+        "units_sold_lag_7",
+        "units_sold_lag_14",
+        "units_sold_lag_28",
+        "units_sold_rolling_mean_7",
+        "units_sold_rolling_std_7",
+        "units_sold_rolling_mean_28",
+        "units_sold_rolling_std_28"
+      ]
+    },
+    "extra_trees": {
+      "params": {
+        "max_depth": 14,
+        "min_samples_leaf": 5
+      },
+      "metrics": {
+        "mae": 68.94278672626949,
+        "mse": 7823.783852583541,
+        "rmse": 88.45215572603949,
+        "r2": 0.3479331700266166
+      },
+      "selected_features": [
+        "store_id",
+        "product_id",
+        "category",
+        "region",
+        "weather_condition",
+        "holiday_promotion",
+        "seasonality",
+        "inventory_level",
+        "units_ordered",
+        "price",
+        "discount",
+        "competitor_pricing",
+        "year",
+        "month",
+        "quarter",
+        "iso_week",
+        "day_of_week",
+        "is_weekend",
+        "is_month_start",
+        "is_month_end",
+        "month_sin",
+        "month_cos",
+        "day_of_week_sin",
+        "day_of_week_cos",
+        "units_sold_lag_1",
+        "units_sold_lag_7",
+        "units_sold_lag_14",
+        "units_sold_lag_28",
+        "units_sold_rolling_mean_7",
+        "units_sold_rolling_std_7",
+        "units_sold_rolling_mean_28",
+        "units_sold_rolling_std_28"
+      ]
     }
   },
-  "best_model": "linear_regression",
+  "best_model": "inventory_only_linear",
+  "prediction_interval_90_abs_error": 152.0553344668558,
+  "leakage_benchmark_deployable": false,
+  "test_stability_months": [
+    "2023-09",
+    "2023-10",
+    "2023-11",
+    "2023-12",
+    "2024-01"
+  ],
   "figure_files": [
     "target_distribution.png",
     "sales_over_time.png",
@@ -118,7 +369,9 @@
     "actual_vs_predicted.png",
     "residual_distribution.png",
     "residuals_over_time.png",
-    "feature_importance.png"
+    "feature_importance.png",
+    "safe_vs_leakage_r2.png",
+    "monthly_model_stability.png"
   ],
   "sklearn_version": "1.9.0"
 }
