@@ -23,6 +23,9 @@ FEATURE_SCHEMA_PATH = MODELS_DIR / "feature_schema.json"
 MODEL_COMPARISON_PATH = METRICS_DIR / "model_comparison.csv"
 TRAINING_SUMMARY_PATH = METRICS_DIR / "training_summary.json"
 BEST_MODEL_INFO_PATH = METRICS_DIR / "best_model.json"
+FEATURE_SIGNAL_AUDIT_PATH = METRICS_DIR / "feature_signal_audit.json"
+LEAKAGE_BENCHMARK_PATH = METRICS_DIR / "leakage_benchmark.json"
+TEST_PERIOD_STABILITY_PATH = METRICS_DIR / "test_period_stability.csv"
 
 DATASET_REF = "anirudhchauhan/retail-store-inventory-forecasting-dataset"
 DATASET_URL = f"https://www.kaggle.com/api/v1/datasets/download/{DATASET_REF}"
@@ -87,6 +90,7 @@ NUMERIC_COLUMNS = [
 
 FEATURE_COLUMNS = CATEGORICAL_COLUMNS + NUMERIC_COLUMNS
 TARGET_COLUMN = "units_sold"
+LEGACY_TEST_R2 = 0.339648394687328
 
 
 def ensure_directories() -> None:

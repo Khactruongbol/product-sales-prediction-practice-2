@@ -33,6 +33,9 @@
     "units_sold_rolling_mean_28",
     "units_sold_rolling_std_28"
   ],
+  "selected_model_features": [
+    "inventory_level"
+  ],
   "categorical": {
     "store_id": [
       "S001",

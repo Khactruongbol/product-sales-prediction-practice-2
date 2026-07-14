@@ -29,6 +29,14 @@ def main() -> None:
     metric_columns[2].metric("Test MAE", f"{metrics['mae']:.2f}")
     metric_columns[3].metric("Test R²", f"{metrics['r2']:.3f}")
 
+    selected_features = model_info.get("selected_features", schema.get("selected_model_features", []))
+    if selected_features:
+        st.info(
+            "Feature được model triển khai sử dụng: "
+            + ", ".join(f"`{feature}`" for feature in selected_features)
+            + ". Các trường còn lại được giữ để so sánh model và tương thích schema."
+        )
+
     categorical = schema["categorical"]
     numeric = schema["numeric"]
     with st.form("prediction_form"):
@@ -93,6 +101,14 @@ def main() -> None:
         prediction = predict_units(model, values)
         st.success(f"Doanh số dự đoán: **{round(prediction):,} đơn vị**")
         st.caption(f"Giá trị liên tục trước khi làm tròn: {prediction:.2f}")
+        interval_error = float(model_info.get("prediction_interval_90_abs_error", 0.0))
+        if interval_error > 0:
+            lower = max(0.0, prediction - interval_error)
+            upper = prediction + interval_error
+            st.info(
+                f"Khoảng dự đoán tham khảo 90%: **{round(lower):,} - {round(upper):,} đơn vị** "
+                f"(hiệu chỉnh từ residual validation ±{interval_error:.1f})."
+            )
 
     st.warning(
         "Kết quả chỉ mang tính tham khảo học thuật. Mô hình được huấn luyện trên dữ liệu tổng hợp và không phải cam kết kinh doanh."

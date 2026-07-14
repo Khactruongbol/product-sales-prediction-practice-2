@@ -1,18 +1,24 @@
 {
-  "model": "linear_regression",
-  "selection_rule": "Lowest test RMSE among ML models after hyperparameters were selected on validation only.",
+  "model": "inventory_only_linear",
+  "selection_rule": "Lowest validation RMSE among deployable ML candidates; test used for final reporting only.",
+  "selected_features": [
+    "inventory_level"
+  ],
   "test_metrics": {
-    "mae": 68.89005345140617,
-    "mse": 7726.998364602437,
-    "rmse": 87.90334672014733,
-    "r2": 0.339648394687328
+    "mae": 68.83263761981836,
+    "mse": 7719.1673369099035,
+    "rmse": 87.85879202965349,
+    "r2": 0.34031763667030834
   },
   "validation_metrics": {
-    "mae": 68.64287676455834,
-    "mse": 7723.334146917692,
-    "rmse": 87.88250193819981,
-    "r2": 0.35630506812342566
+    "mae": 68.62065416501677,
+    "mse": 7712.890041690727,
+    "rmse": 87.8230609902133,
+    "r2": 0.3571755234830797
   },
+  "legacy_test_r2": 0.339648394687328,
+  "test_r2_improvement": 0.0006692419829803509,
+  "prediction_interval_90_abs_error": 152.0553344668558,
   "baseline_test_rmse": 151.98381803138196,
   "best_params": {},
   "model_path": "models\\best_model.joblib"
