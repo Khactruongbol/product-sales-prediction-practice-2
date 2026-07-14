@@ -1,0 +1,12 @@
+{
+  "dataset_ref": "anirudhchauhan/retail-store-inventory-forecasting-dataset",
+  "dataset_page": "https://www.kaggle.com/datasets/anirudhchauhan/retail-store-inventory-forecasting-dataset",
+  "download_url": "https://www.kaggle.com/api/v1/datasets/download/anirudhchauhan/retail-store-inventory-forecasting-dataset",
+  "license": "CC0: Public Domain",
+  "downloaded_at_utc": "2026-07-14T04:26:02.357056+00:00",
+  "file": "retail_store_inventory.csv",
+  "bytes": 6191463,
+  "sha256": "c7b6019887d85e6bb311a76da72560463e6bf269bfadbe4b326fbff3b1000468",
+  "rows": 73100,
+  "columns": 15
+}

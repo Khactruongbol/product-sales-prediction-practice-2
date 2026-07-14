@@ -1,0 +1,19 @@
+{
+  "model": "linear_regression",
+  "selection_rule": "Lowest test RMSE among ML models after hyperparameters were selected on validation only.",
+  "test_metrics": {
+    "mae": 68.89005345140617,
+    "mse": 7726.998364602437,
+    "rmse": 87.90334672014733,
+    "r2": 0.339648394687328
+  },
+  "validation_metrics": {
+    "mae": 68.64287676455834,
+    "mse": 7723.334146917692,
+    "rmse": 87.88250193819981,
+    "r2": 0.35630506812342566
+  },
+  "baseline_test_rmse": 151.98381803138196,
+  "best_params": {},
+  "model_path": "models\\best_model.joblib"
+}

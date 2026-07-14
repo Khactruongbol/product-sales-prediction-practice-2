@@ -1,0 +1,32 @@
+{
+  "raw_rows": 73100,
+  "duplicates_removed": 0,
+  "invalid_rows_removed": 0,
+  "history_rows_removed": 2800,
+  "processed_rows": 70300,
+  "missing_values_raw": 0,
+  "outlier_policy": "No target rows removed solely as statistical outliers; valid seasonal peaks are retained.",
+  "leakage_exclusion": [
+    "demand_forecast"
+  ],
+  "split": {
+    "train": {
+      "rows": 49200,
+      "start_date": "2022-01-29",
+      "end_date": "2023-06-04",
+      "unique_dates": 492
+    },
+    "validation": {
+      "rows": 10500,
+      "start_date": "2023-06-05",
+      "end_date": "2023-09-17",
+      "unique_dates": 105
+    },
+    "test": {
+      "rows": 10600,
+      "start_date": "2023-09-18",
+      "end_date": "2024-01-01",
+      "unique_dates": 106
+    }
+  }
+}

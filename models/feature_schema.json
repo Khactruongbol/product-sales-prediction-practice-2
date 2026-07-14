@@ -1,0 +1,223 @@
+{
+  "feature_order": [
+    "store_id",
+    "product_id",
+    "category",
+    "region",
+    "weather_condition",
+    "holiday_promotion",
+    "seasonality",
+    "inventory_level",
+    "units_ordered",
+    "price",
+    "discount",
+    "competitor_pricing",
+    "year",
+    "month",
+    "quarter",
+    "iso_week",
+    "day_of_week",
+    "is_weekend",
+    "is_month_start",
+    "is_month_end",
+    "month_sin",
+    "month_cos",
+    "day_of_week_sin",
+    "day_of_week_cos",
+    "units_sold_lag_1",
+    "units_sold_lag_7",
+    "units_sold_lag_14",
+    "units_sold_lag_28",
+    "units_sold_rolling_mean_7",
+    "units_sold_rolling_std_7",
+    "units_sold_rolling_mean_28",
+    "units_sold_rolling_std_28"
+  ],
+  "categorical": {
+    "store_id": [
+      "S001",
+      "S002",
+      "S003",
+      "S004",
+      "S005"
+    ],
+    "product_id": [
+      "P0001",
+      "P0002",
+      "P0003",
+      "P0004",
+      "P0005",
+      "P0006",
+      "P0007",
+      "P0008",
+      "P0009",
+      "P0010",
+      "P0011",
+      "P0012",
+      "P0013",
+      "P0014",
+      "P0015",
+      "P0016",
+      "P0017",
+      "P0018",
+      "P0019",
+      "P0020"
+    ],
+    "category": [
+      "Clothing",
+      "Electronics",
+      "Furniture",
+      "Groceries",
+      "Toys"
+    ],
+    "region": [
+      "East",
+      "North",
+      "South",
+      "West"
+    ],
+    "weather_condition": [
+      "Cloudy",
+      "Rainy",
+      "Snowy",
+      "Sunny"
+    ],
+    "holiday_promotion": [
+      "0",
+      "1"
+    ],
+    "seasonality": [
+      "Autumn",
+      "Spring",
+      "Summer",
+      "Winter"
+    ]
+  },
+  "numeric": {
+    "inventory_level": {
+      "min": 50.0,
+      "max": 500.0,
+      "median": 274.0
+    },
+    "units_ordered": {
+      "min": 20.0,
+      "max": 200.0,
+      "median": 110.0
+    },
+    "price": {
+      "min": 10.0,
+      "max": 100.0,
+      "median": 55.06
+    },
+    "discount": {
+      "min": 0.0,
+      "max": 20.0,
+      "median": 10.0
+    },
+    "competitor_pricing": {
+      "min": 5.03,
+      "max": 104.94,
+      "median": 55.01
+    },
+    "year": {
+      "min": 2022.0,
+      "max": 2023.0,
+      "median": 2022.0
+    },
+    "month": {
+      "min": 1.0,
+      "max": 12.0,
+      "median": 6.0
+    },
+    "quarter": {
+      "min": 1.0,
+      "max": 4.0,
+      "median": 2.0
+    },
+    "iso_week": {
+      "min": 1.0,
+      "max": 52.0,
+      "median": 24.0
+    },
+    "day_of_week": {
+      "min": 0.0,
+      "max": 6.0,
+      "median": 3.0
+    },
+    "is_weekend": {
+      "min": 0.0,
+      "max": 1.0,
+      "median": 0.0
+    },
+    "is_month_start": {
+      "min": 0.0,
+      "max": 1.0,
+      "median": 0.0
+    },
+    "is_month_end": {
+      "min": 0.0,
+      "max": 1.0,
+      "median": 0.0
+    },
+    "month_sin": {
+      "min": -1.0,
+      "max": 1.0,
+      "median": 1.2246467991473532e-16
+    },
+    "month_cos": {
+      "min": -1.0,
+      "max": 1.0,
+      "median": -0.4999999999999998
+    },
+    "day_of_week_sin": {
+      "min": -0.9749279121818236,
+      "max": 0.9749279121818236,
+      "median": 0.0
+    },
+    "day_of_week_cos": {
+      "min": -0.9009688679024191,
+      "max": 1.0,
+      "median": -0.2225209339563143
+    },
+    "units_sold_lag_1": {
+      "min": 0.0,
+      "max": 499.0,
+      "median": 107.0
+    },
+    "units_sold_lag_7": {
+      "min": 0.0,
+      "max": 499.0,
+      "median": 107.0
+    },
+    "units_sold_lag_14": {
+      "min": 0.0,
+      "max": 499.0,
+      "median": 107.0
+    },
+    "units_sold_lag_28": {
+      "min": 0.0,
+      "max": 499.0,
+      "median": 107.0
+    },
+    "units_sold_rolling_mean_7": {
+      "min": 16.285714285714285,
+      "max": 315.1428571428572,
+      "median": 134.14285714285714
+    },
+    "units_sold_rolling_std_7": {
+      "min": 7.081162132225825,
+      "max": 214.56811550292417,
+      "median": 104.27550504395742
+    },
+    "units_sold_rolling_mean_28": {
+      "min": 70.89285714285714,
+      "max": 222.5,
+      "median": 135.89285714285714
+    },
+    "units_sold_rolling_std_28": {
+      "min": 49.47609117425898,
+      "max": 158.2692560398494,
+      "median": 108.44331413669535
+    }
+  }
+}
