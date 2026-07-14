@@ -1,0 +1,2 @@
+"""Product sales prediction pipeline."""
+

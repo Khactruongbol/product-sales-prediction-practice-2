@@ -1,0 +1,124 @@
+{
+  "trained_at_utc": "2026-07-14T04:26:22.764793+00:00",
+  "random_seed": 42,
+  "python_rows": {
+    "train": 49200,
+    "validation": 10500,
+    "train_plus_validation": 59700,
+    "test": 10600
+  },
+  "date_ranges": {
+    "train": [
+      "2022-01-29 00:00:00",
+      "2023-06-04 00:00:00"
+    ],
+    "validation": [
+      "2023-06-05 00:00:00",
+      "2023-09-17 00:00:00"
+    ],
+    "test": [
+      "2023-09-18 00:00:00",
+      "2024-01-01 00:00:00"
+    ]
+  },
+  "feature_count": 32,
+  "features": [
+    "store_id",
+    "product_id",
+    "category",
+    "region",
+    "weather_condition",
+    "holiday_promotion",
+    "seasonality",
+    "inventory_level",
+    "units_ordered",
+    "price",
+    "discount",
+    "competitor_pricing",
+    "year",
+    "month",
+    "quarter",
+    "iso_week",
+    "day_of_week",
+    "is_weekend",
+    "is_month_start",
+    "is_month_end",
+    "month_sin",
+    "month_cos",
+    "day_of_week_sin",
+    "day_of_week_cos",
+    "units_sold_lag_1",
+    "units_sold_lag_7",
+    "units_sold_lag_14",
+    "units_sold_lag_28",
+    "units_sold_rolling_mean_7",
+    "units_sold_rolling_std_7",
+    "units_sold_rolling_mean_28",
+    "units_sold_rolling_std_28"
+  ],
+  "excluded_from_features": [
+    "date",
+    "units_sold",
+    "demand_forecast"
+  ],
+  "validation_choices": {
+    "linear_regression": {
+      "params": {},
+      "metrics": {
+        "mae": 68.64287676455834,
+        "mse": 7723.334146917692,
+        "rmse": 87.88250193819981,
+        "r2": 0.35630506812342566
+      }
+    },
+    "decision_tree": {
+      "params": {
+        "max_depth": 10,
+        "min_samples_leaf": 10
+      },
+      "metrics": {
+        "mae": 70.95348852984618,
+        "mse": 8498.74290885298,
+        "rmse": 92.18862678689264,
+        "r2": 0.29167926264929234
+      }
+    },
+    "random_forest": {
+      "params": {
+        "max_depth": null,
+        "min_samples_leaf": 2
+      },
+      "metrics": {
+        "mae": 70.29200274701758,
+        "mse": 8002.366217409393,
+        "rmse": 89.45594567947619,
+        "r2": 0.33304936971780685
+      }
+    },
+    "hist_gradient_boosting": {
+      "params": {
+        "learning_rate": 0.1,
+        "max_leaf_nodes": 31
+      },
+      "metrics": {
+        "mae": 68.8790302963412,
+        "mse": 7797.363899981212,
+        "rmse": 88.30268342457782,
+        "r2": 0.35013511924531326
+      }
+    }
+  },
+  "best_model": "linear_regression",
+  "figure_files": [
+    "target_distribution.png",
+    "sales_over_time.png",
+    "sales_by_category.png",
+    "promotion_effect.png",
+    "model_comparison_rmse.png",
+    "actual_vs_predicted.png",
+    "residual_distribution.png",
+    "residuals_over_time.png",
+    "feature_importance.png"
+  ],
+  "sklearn_version": "1.9.0"
+}

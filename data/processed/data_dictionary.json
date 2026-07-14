@@ -1,0 +1,46 @@
+{
+  "target": {
+    "name": "units_sold",
+    "meaning": "Units sold per store-product-day"
+  },
+  "excluded": {
+    "demand_forecast": "Provided forecast; excluded to avoid target leakage"
+  },
+  "categorical_features": [
+    "store_id",
+    "product_id",
+    "category",
+    "region",
+    "weather_condition",
+    "holiday_promotion",
+    "seasonality"
+  ],
+  "numeric_features": [
+    "inventory_level",
+    "units_ordered",
+    "price",
+    "discount",
+    "competitor_pricing",
+    "year",
+    "month",
+    "quarter",
+    "iso_week",
+    "day_of_week",
+    "is_weekend",
+    "is_month_start",
+    "is_month_end",
+    "month_sin",
+    "month_cos",
+    "day_of_week_sin",
+    "day_of_week_cos",
+    "units_sold_lag_1",
+    "units_sold_lag_7",
+    "units_sold_lag_14",
+    "units_sold_lag_28",
+    "units_sold_rolling_mean_7",
+    "units_sold_rolling_std_7",
+    "units_sold_rolling_mean_28",
+    "units_sold_rolling_std_28"
+  ],
+  "history_rule": "All lag and rolling features use shift(1) within store_id + product_id."
+}
